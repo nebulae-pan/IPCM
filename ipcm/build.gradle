@@ -1,0 +1,42 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 28
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags "-std=c++1z -fno-exceptions"
+//                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+//            }
+//        }
+    }
+
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled true
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+            proguardFile project.file('proguard-rules-android-lib.pro')
+            // NOTE: default rules for android library if this file exists
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path file('CMakeLists.txt')
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+sourceCompatibility = "7"
+targetCompatibility = "7"
