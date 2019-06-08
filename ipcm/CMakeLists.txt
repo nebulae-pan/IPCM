@@ -17,12 +17,14 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        src/main/cpp/IPCM.h
-        src/main/cpp/IPCM.cpp
-        src/main/cpp/ThreadLock.h
-        src/main/cpp/ThreadLock.cpp
-        src/main/cpp/Logger.h
-        src/main/cpp/Logger.cpp
+        src/main/cpp/ipcm.h
+        src/main/cpp/ipcm.cpp
+        src/main/cpp/thread_lock.h
+        src/main/cpp/thread_lock.cpp
+        src/main/cpp/logger.h
+        src/main/cpp/logger.cpp
+        src/main/cpp/mmap_file.h
+        src/main/cpp/mmap_file.cpp
         src/main/cpp/bridge.cpp
 
         )

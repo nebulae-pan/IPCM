@@ -3,7 +3,7 @@
 //
 
 #include <string>
-#include "Logger.h"
+#include "logger.h"
 
 #define TAG "IPCM"
 using namespace std;
@@ -13,6 +13,7 @@ void log(int priority, const char *file, int line, const char *func, const char 
     va_list list;
     char buffer[8];
     va_start(list, format);
+    //read format string and get real length
     auto length = vsnprintf(buffer, sizeof(buffer), format, list);
     va_end(list);
     if (length < 0) {

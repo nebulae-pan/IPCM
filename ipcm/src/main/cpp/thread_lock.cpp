@@ -2,8 +2,8 @@
 // Created by nebula on 2019-06-06.
 //
 
-#include "ThreadLock.h"
-#include "Logger.h"
+#include "thread_lock.h"
+#include "logger.h"
 
 ThreadLock::ThreadLock() {
     // use pthread init mutex reentrant lock
