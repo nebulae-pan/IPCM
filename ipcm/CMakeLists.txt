@@ -25,6 +25,8 @@ add_library( # Sets the name of the library.
         src/main/cpp/logger.cpp
         src/main/cpp/mmap_file.h
         src/main/cpp/mmap_file.cpp
+        src/main/cpp/file_lock.h
+        src/main/cpp/file_lock.cpp
         src/main/cpp/bridge.cpp
 
         )

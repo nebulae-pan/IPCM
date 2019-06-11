@@ -5,6 +5,7 @@
 #ifndef IPCM_MEMORYMAPFILE_H
 #define IPCM_MEMORYMAPFILE_H
 
+#include "logger.h"
 #include <string>
 #include <sys/ioctl.h>
 
