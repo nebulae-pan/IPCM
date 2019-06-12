@@ -5,6 +5,7 @@
 #ifndef IPCM_FILE_LOCK_H
 #define IPCM_FILE_LOCK_H
 
+#include "logger.h"
 #include <fcntl.h>
 
 class FileLock{
@@ -13,9 +14,9 @@ class FileLock{
     size_t m_shared_lock_count;
     size_t m_exclusive_lock_count;
     //flock type  exclusive:F_WRLCK, shared:F_RDLCK
-    short type;
+    short m_type;
 
-    bool do_lock();
+    bool do_lock(int cmd);
 
     bool is_lock_valid(){
         return m_fd >= 0;
@@ -26,8 +27,28 @@ public:
     bool lock();
     bool try_lock();
     bool unlock();
+};
 
 
+class LockUtil{
+    FileLock *m_lock;
+public:
+    LockUtil(FileLock *lock):m_lock(lock){
+        this->lock();
+    }
+
+    ~LockUtil(){
+        unlock();
+        m_lock = nullptr;
+    }
+
+    void lock(){
+        if(m_lock)m_lock->lock();
+    }
+
+    void unlock(){
+        if(m_lock)m_lock->unlock();
+    }
 };
 
 

@@ -17,13 +17,16 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         return;
     }
     FileLock fileLock(m_fd, F_WRLCK);
+    //lock file by fileLock
+    LockUtil lockUtil(&fileLock);
 
     struct stat st = {};
     if (fstat(m_fd, &st) != -1) {
+        //get segment size
         m_segment_size = static_cast<size_t>(st.st_size);
     }
-    if (m_segment_size < DEFAULT_MMAP_SIZE) {
-        m_segment_size = static_cast<size_t>(DEFAULT_MMAP_SIZE);
+    if (m_segment_size < getpagesize()) {
+        m_segment_size = static_cast<size_t>(getpagesize());
     }
     m_segment_ptr =
             (char *) mmap(nullptr, m_segment_size, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0);
