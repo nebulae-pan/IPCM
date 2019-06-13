@@ -11,8 +11,8 @@
 
 MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         : m_name(path), m_fd(-1), m_segment_ptr(nullptr), m_segment_size(0) {
-    m_fd = open(path.c_str(), O_RDWR | O_CREAT , S_IRWXU);
-    if(m_fd < 0){
+    m_fd = open(path.c_str(), O_RDWR | O_CREAT, S_IRWXU);
+    if (m_fd < 0) {
         LOGE("failed to open %s, %s", m_name.c_str(), strerror(errno));
         return;
     }
@@ -25,8 +25,17 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         //get segment size
         m_segment_size = static_cast<size_t>(st.st_size);
     }
+    //resize file to default page size
     if (m_segment_size < getpagesize()) {
         m_segment_size = static_cast<size_t>(getpagesize());
+        if (ftruncate(m_fd, m_segment_size) != 0 || !fill_file_by_zero(m_fd, 0, m_segment_size)) {
+            LOGE("fail to truncate [%s] to size %zu, %s", m_name.c_str(), m_segment_size,
+                 strerror(errno));
+            close(m_fd);
+            m_fd = -1;
+            //remove_file();
+            return;
+        }
     }
     m_segment_ptr =
             (char *) mmap(nullptr, m_segment_size, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0);
@@ -36,13 +45,44 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         m_fd = -1;
         m_segment_ptr = nullptr;
     }
-
 }
 
 MemoryMapFile::~MemoryMapFile() {
-
+    if (m_segment_ptr != MAP_FAILED && m_segment_ptr != nullptr) {
+        munmap(m_segment_ptr, m_segment_size);
+        m_segment_ptr = nullptr;
+    }
+    if (m_fd >= 0) {
+        close(m_fd);
+        m_fd = -1;
+    }
 }
 
 void mk_path(const char *path) {
+//    struct sta
+}
 
+bool fill_file_by_zero(int fd, size_t start_pos, size_t size) {
+    if (fd < 0) {
+        return false;
+    }
+    if (lseek(fd, start_pos, SEEK_SET) < 0) {
+        LOGE("fail to lseek fd:[%d] , error: %s", fd, strerror(errno));
+        return false;
+    }
+    static const char zeros[4086] = {0};
+    while (size >= sizeof(zeros)) {
+        if (write(fd, zeros, sizeof(zeros)) < 0) {
+            LOGE("fail to write fd:[%d], error:%s", fd, strerror(errno));
+            return false;
+        }
+        size -= sizeof(zeros);
+    }
+    if (size > 0) {
+        if (write(fd, zeros, size) < 0) {
+            LOGE("fail to write fd:[%d], error:%s", fd, strerror(errno));
+            return false;
+        }
+    }
+    return true;
 }

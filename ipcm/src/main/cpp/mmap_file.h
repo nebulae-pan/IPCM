@@ -28,7 +28,7 @@ public:
 
 void mk_path(const char *path);
 
-void fill_file_by_zero(int fd, size_t start, size_t size);
+bool fill_file_by_zero(int fd, size_t start, size_t size);
 
 
 #endif //IPCM_MEMORYMAPFILE_H
