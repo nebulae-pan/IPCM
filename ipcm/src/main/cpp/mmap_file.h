@@ -8,10 +8,10 @@
 #include "logger.h"
 #include <string>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 using namespace std;
 
-extern const int DEFAULT_MMAP_SIZE;
 
 class MemoryMapFile{
     string m_name;
@@ -21,14 +21,15 @@ class MemoryMapFile{
 
 public:
     MemoryMapFile(const string &path,
-                  size_t size = static_cast<size_t>(DEFAULT_MMAP_SIZE),
+                  size_t size = static_cast<size_t>(getpagesize()),
                   bool file_type = false);
     ~MemoryMapFile();
 };
 
-void mk_path(const char *path);
+bool mk_path(char *path);
 
 bool fill_file_by_zero(int fd, size_t start, size_t size);
 
+void delete_file(const string &file_path);
 
 #endif //IPCM_MEMORYMAPFILE_H

@@ -15,6 +15,7 @@ class FileLock{
     size_t m_exclusive_lock_count;
     //flock type  exclusive:F_WRLCK, shared:F_RDLCK
     short m_type;
+    bool m_enable;
 
     bool do_lock(int cmd);
 
@@ -29,11 +30,11 @@ public:
     bool unlock();
 };
 
-
+template <typename T>
 class LockUtil{
-    FileLock *m_lock;
+    T *m_lock;
 public:
-    LockUtil(FileLock *lock):m_lock(lock){
+    LockUtil(T *lock):m_lock(lock){
         this->lock();
     }
 

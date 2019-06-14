@@ -16,4 +16,6 @@ public class IPCM {
     }
 
     public static native void nativeInit(String rootDir);
+
+    public static native long defaultIPCM(int mode);
 }

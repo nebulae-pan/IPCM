@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <unistd.h>
 
 MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         : m_name(path), m_fd(-1), m_segment_ptr(nullptr), m_segment_size(0) {
@@ -18,7 +17,7 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
     }
     FileLock fileLock(m_fd, F_WRLCK);
     //lock file by fileLock
-    LockUtil lockUtil(&fileLock);
+    LockUtil<FileLock> lockUtil(&fileLock);
 
     struct stat st = {};
     if (fstat(m_fd, &st) != -1) {
@@ -33,7 +32,7 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
                  strerror(errno));
             close(m_fd);
             m_fd = -1;
-            //remove_file();
+            delete_file(m_name.c_str());
             return;
         }
     }
@@ -58,8 +57,36 @@ MemoryMapFile::~MemoryMapFile() {
     }
 }
 
-void mk_path(const char *path) {
-//    struct sta
+/**
+ *
+ * @param path
+ * @return
+ */
+bool mk_path(char *path) {
+    struct stat st = {};
+    bool done = false;
+    char *slash = path;
+    while (!done) {
+        //skip first '/'
+        slash += strspn(slash, "/");
+        //skip to next '/'
+        slash += strcspn(slash, "/");
+
+        done = (*slash == '\0');
+        //split prev path
+        *slash = '\0';
+        if (stat(path, &st) != 0) {
+            if (errno != ENOENT || mkdir(path, 0777) != 0) {
+                LOGE("%s : %s", path, strerror(errno));
+                return false;
+            }
+        } else if (!S_ISDIR(st.st_mode)) {
+            LOGE("%s: %s", path, strerror(ENOTDIR));
+            return false;
+        }
+        *slash = '/';
+    }
+    return true;
 }
 
 bool fill_file_by_zero(int fd, size_t start_pos, size_t size) {
@@ -85,4 +112,11 @@ bool fill_file_by_zero(int fd, size_t start_pos, size_t size) {
         }
     }
     return true;
+}
+
+void delete_file(const string &file_path){
+    auto result = unlink(file_path.c_str());
+    if (result != 0) {
+        LOGE("failed to delete file:%s, %s", file_path.c_str(), strerror(errno));
+    }
 }

@@ -4,7 +4,7 @@
 
 #include "file_lock.h"
 
-FileLock::FileLock(int fd, short type) : m_fd(fd), m_type(type) {
+FileLock::FileLock(int fd, short type) : m_fd(fd), m_type(type), m_enable(true) {
     m_flock.l_type = type;
     m_flock.l_len = 0;
     m_flock.l_whence = SEEK_SET;
@@ -54,10 +54,12 @@ bool FileLock::do_lock(int cmd) {
 }
 
 bool FileLock::lock() {
+    if(!m_enable)return false;
     return do_lock(F_SETLKW);
 }
 
 bool FileLock::try_lock() {
+    if(!m_enable)return false;
     return do_lock(F_SETLK);
 }
 
