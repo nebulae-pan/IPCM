@@ -13,6 +13,10 @@ static unordered_map<string, IPCM *> *s_dic;
 static ThreadLock s_lock;
 static string s_root_dir;
 
+
+static std::string md5(const std::string &value);
+static std::string gen_map_key(const std::string &map_id, std::string *relative_path);
+
 void init_thread() {
     s_dic = new unordered_map<string, IPCM *>;
     s_lock = ThreadLock();
@@ -43,18 +47,21 @@ IPCM *IPCM::create_instance(const std::string &map_id, int page_size, size_t mod
     }
     LockUtil<ThreadLock> lock(&s_lock);
     auto key = gen_map_key(map_id, nullptr);
-    return nullptr;
+    auto iterator = s_dic->find(key);
+    if (iterator != s_dic->end()) {
+        return iterator->second;
+    }
+    //todo:deal with relative path
+    auto ptr = new IPCM();
+    (*s_dic)[key] = ptr;
+    return ptr;
 }
 
-static string md5(const string &value) {
-    unsigned char md[MD5_DIGEST_LENGTH] = {0};
-    char tmp[3] = {0}, buf[33] = {0};
-    MD5((const unsigned char *) value.c_str(), value.size(), md);
-    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-        sprintf(tmp, "%2.2x", md[i]);
-        strcat(buf, tmp);
+void IPCM::encodeInt(const std::string &key, int value) {
+    if (key.empty()) {
+        return;
     }
-    return string(buf);
+    size_t size = 1;
 }
 
 static string gen_map_key(const string &map_id, string *relative_path) {
@@ -64,7 +71,15 @@ static string gen_map_key(const string &map_id, string *relative_path) {
     return map_id;
 }
 
-
-
+static string md5(const string &value) {
+    unsigned char md[MD5_DIGEST_LENGTH] = {0};
+    char tmp[3] = {0}, buf[33] = {0};
+    MD5((const unsigned char *) value.c_str(), value.size(), md);
+    for (unsigned char i : md) {
+        sprintf(tmp, "%2.2x", i);
+        strcat(buf, tmp);
+    }
+    return string(buf);
+}
 
 

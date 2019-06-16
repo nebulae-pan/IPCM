@@ -8,7 +8,7 @@ import com.nebula.module.ipcm.IPCM
  * crated by nebula on 2019/06/01
  */
 class MainActivity : AppCompatActivity() {
-    companion object{
+    companion object {
         init {
             System.loadLibrary("ipcm")
         }
@@ -18,5 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         IPCM.init(this)
+        val ipcm = IPCM.obtain()
+
     }
 }

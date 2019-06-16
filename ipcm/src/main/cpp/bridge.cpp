@@ -7,7 +7,7 @@
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_nebula_module_ipcm_IPCM_nativeInit(JNIEnv* env, jclass type, jstring rootDir){
+Java_com_nebula_module_ipcm_IPCM_nativeInit(JNIEnv *env, jclass type, jstring rootDir) {
     if (!rootDir) {
         return;
     }
@@ -23,4 +23,18 @@ JNIEXPORT jlong JNICALL
 Java_com_nebula_module_ipcm_IPCM_defaultIPCM(JNIEnv *env, jclass type, jint mode) {
     IPCM *ptr = IPCM::default_instance(static_cast<size_t>(mode));
     return reinterpret_cast<jlong>(ptr);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_nebula_module_ipcm_IPCM_encodeInt(JNIEnv *env, jobject instance, jlong ptr, jstring key_,
+                                           jint value) {
+    const char *key = env->GetStringUTFChars(key_, nullptr);
+    IPCM *ipcm = reinterpret_cast<IPCM *>(ptr);
+    if (ipcm && key) {
+
+    }
+
+
+    env->ReleaseStringUTFChars(key_, key);
 }

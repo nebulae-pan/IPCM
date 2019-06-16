@@ -23,11 +23,8 @@ public:
 
     static IPCM *create_instance(const std::string &map_id, int page_size,
             size_t mode, std::string *relative_path = nullptr);
+
+    void encodeInt(const std::string &key, int value);
 };
-
-static std::string md5(const std::string &value);
-
-static std::string gen_map_key(const std::string &map_id, std::string *relative_path);
-
 #endif //IPCM_IPCM_H
 
