@@ -28,13 +28,14 @@ public class IPCM {
         Log.e("IPCM", ptr + ":");
     }
 
-    public void put(String key, int value) {
-        encodeInt(mPointer, key, value);
+    public boolean put(String key, int value) {
+        return encodeInt(mPointer, key, value);
     }
 
-    public void put(String key, String value) {
-
+    public boolean put(String key, String value) {
+        return encodeString(mPointer, key, value);
     }
+
 
     public void put(String key, long value) {
 
@@ -45,5 +46,7 @@ public class IPCM {
 
     private static native long defaultIPCM(int mode);
 
-    private native void encodeInt(long ptr, String key, int value);
+    private native boolean encodeInt(long ptr, String key, int value);
+
+    private native boolean encodeString(long mPointer, String key, String value);
 }

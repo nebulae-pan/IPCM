@@ -27,6 +27,10 @@ add_library( # Sets the name of the library.
         src/main/cpp/mmap_file.cpp
         src/main/cpp/file_lock.h
         src/main/cpp/file_lock.cpp
+        src/main/cpp/ipc_buffer.h
+        src/main/cpp/ipc_buffer.cpp
+        src/main/cpp/out_data.h
+        src/main/cpp/out_data.cpp
         src/main/cpp/constant.h
         src/main/cpp/bridge.cpp
         src/main/cpp/openssl/aes.h

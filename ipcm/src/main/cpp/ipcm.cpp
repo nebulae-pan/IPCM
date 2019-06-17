@@ -57,11 +57,14 @@ IPCM *IPCM::create_instance(const std::string &map_id, int page_size, size_t mod
     return ptr;
 }
 
-void IPCM::encodeInt(const std::string &key, int value) {
+bool IPCM::encodeInt(const std::string &key, int value) {
     if (key.empty()) {
-        return;
+        return false;
     }
     size_t size = 1;
+    IPCBuffer buffer(size);
+    SinkData data(buffer.get_ptr(), size);
+    return false;
 }
 
 static string gen_map_key(const string &map_id, string *relative_path) {

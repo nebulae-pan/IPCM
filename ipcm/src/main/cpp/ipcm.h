@@ -8,6 +8,8 @@
 #include "logger.h"
 #include "file_lock.h"
 #include "openssl/md5.h"
+#include "ipc_buffer.h"
+#include "out_data.h"
 #include <unordered_map>
 #include <string>
 #include <pthread.h>
@@ -24,7 +26,7 @@ public:
     static IPCM *create_instance(const std::string &map_id, int page_size,
             size_t mode, std::string *relative_path = nullptr);
 
-    void encodeInt(const std::string &key, int value);
+    bool encodeInt(const std::string &key, int value);
 };
 #endif //IPCM_IPCM_H
 
