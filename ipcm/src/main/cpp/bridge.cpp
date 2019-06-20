@@ -21,15 +21,16 @@ static std::string jstring2string(JNIEnv *env, jstring str) {
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_nebula_module_ipcm_IPCM_nativeInit(JNIEnv *env, jclass type, jstring rootDir) {
-    if (!rootDir) {
-        return;
-    }
-    const char *str = env->GetStringUTFChars(rootDir, nullptr);
-    //use param init IPCM in c++ layer
-    if (str) {
-        IPCM::init(str);
-        env->ReleaseStringUTFChars(rootDir, str);
-    }
+//    if (!rootDir) {
+//        return;
+//    }
+//    const char *str = env->GetStringUTFChars(rootDir, nullptr);
+//    //use param init IPCM in c++ layer
+//    if (str) {
+//        IPCM::init(str);
+//        env->ReleaseStringUTFChars(rootDir, str);
+//    }
+    test();
 }
 extern "C"
 JNIEXPORT jlong JNICALL
@@ -61,4 +62,5 @@ Java_com_nebula_module_ipcm_IPCM_encodeString(JNIEnv *env, jobject instance, jlo
 
     env->ReleaseStringUTFChars(key_, key);
     env->ReleaseStringUTFChars(value_, value);
+    return (jboolean) false;
 }

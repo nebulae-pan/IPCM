@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         IPCM.init(this)
-        val ipcm = IPCM.obtain()
+//        val ipcm = IPCM.obtain()
 
     }
 }

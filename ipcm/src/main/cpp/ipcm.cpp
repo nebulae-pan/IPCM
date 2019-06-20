@@ -64,6 +64,7 @@ bool IPCM::encodeInt(const std::string &key, int value) {
     size_t size = 1;
     IPCBuffer buffer(size);
     SinkData data(buffer.get_ptr(), size);
+    data.write_int32(value);
     return false;
 }
 
