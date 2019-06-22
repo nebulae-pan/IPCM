@@ -9,8 +9,8 @@
 #include <unordered_map>
 
 using namespace std;
-static unordered_map<string, IPCM *> *s_dic;
-static ThreadLock s_lock;
+static unordered_map<string, IPCM *> *s_instance_dic;
+static ThreadLock s_instance_lock;
 static string s_root_dir;
 
 
@@ -18,8 +18,8 @@ static std::string md5(const std::string &value);
 static std::string gen_map_key(const std::string &map_id, std::string *relative_path);
 
 void init_thread() {
-    s_dic = new unordered_map<string, IPCM *>;
-    s_lock = ThreadLock();
+    s_instance_dic = new unordered_map<string, IPCM *>;
+    s_instance_lock = ThreadLock();
 }
 
 void IPCM::init(const std::string &root_dir) {
@@ -45,15 +45,15 @@ IPCM *IPCM::create_instance(const std::string &map_id, int page_size, size_t mod
     if (map_id.empty()) {
         return nullptr;
     }
-    LockUtil<ThreadLock> lock(&s_lock);
+    LockUtil<ThreadLock> lock(&s_instance_lock);
     auto key = gen_map_key(map_id, nullptr);
-    auto iterator = s_dic->find(key);
-    if (iterator != s_dic->end()) {
+    auto iterator = s_instance_dic->find(key);
+    if (iterator != s_instance_dic->end()) {
         return iterator->second;
     }
     //todo:deal with relative path
     auto ptr = new IPCM();
-    (*s_dic)[key] = ptr;
+    (*s_instance_dic)[key] = ptr;
     return ptr;
 }
 
@@ -65,7 +65,22 @@ bool IPCM::encodeInt(const std::string &key, int value) {
     IPCBuffer buffer(size);
     SinkData data(buffer.get_ptr(), size);
     data.write_int32(value);
-    return false;
+    return set_memory_data_by_key(key, move(buffer));
+}
+
+bool IPCM::set_memory_data_by_key(const std::string key, IPCBuffer &&buffer) {
+    if(buffer.length() == 0 || key.empty()){
+        return false;
+    }
+    LockUtil lock(&m_thread_lock);
+    LockUtil lock1(&m_exclusive_lock);
+    auto iter = m_dic.find(key);
+    if(iter == m_dic.end()){
+        iter = m_dic.emplace(key, move(buffer)).first;
+    } else{
+        iter->second = move(buffer);
+    }
+    return true;
 }
 
 static string gen_map_key(const string &map_id, string *relative_path) {

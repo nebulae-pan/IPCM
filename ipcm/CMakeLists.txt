@@ -29,8 +29,10 @@ add_library( # Sets the name of the library.
         src/main/cpp/file_lock.cpp
         src/main/cpp/ipc_buffer.h
         src/main/cpp/ipc_buffer.cpp
-        src/main/cpp/out_data.h
-        src/main/cpp/out_data.cpp
+        src/main/cpp/sink_data.h
+        src/main/cpp/sink_data.cpp
+        src/main/cpp/source_data.h
+        src/main/cpp/source_data.cpp
         src/main/cpp/constant.h
         src/main/cpp/bridge.cpp
         src/main/cpp/openssl/aes.h
