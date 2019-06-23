@@ -5,7 +5,7 @@
 #include "ipcm.h"
 #include "mmap_file.h"
 #include "thread_lock.h"
-#include "constant.h"
+#include "utils.h"
 #include <unordered_map>
 
 using namespace std;
@@ -15,7 +15,13 @@ static string s_root_dir;
 
 
 static std::string md5(const std::string &value);
+
 static std::string gen_map_key(const std::string &map_id, std::string *relative_path);
+
+
+IPCM::IPCM() : m_exclusive_lock(0, FileLock::TYPE_EXCLUSIVE) {
+
+}
 
 void init_thread() {
     s_instance_dic = new unordered_map<string, IPCM *>;
@@ -57,31 +63,58 @@ IPCM *IPCM::create_instance(const std::string &map_id, int page_size, size_t mod
     return ptr;
 }
 
+bool IPCM::set_memory_data_by_key(const std::string &key, IPCBuffer &&buffer) {
+    if (buffer.length() == 0 || key.empty()) {
+        return false;
+    }
+    SCOPELOCK(m_thread_lock);
+    SCOPELOCK(m_exclusive_lock);
+    auto iter = m_dic.find(key);
+    if (iter == m_dic.end()) {
+        iter = m_dic.emplace(key, move(buffer)).first;
+    } else {
+        iter->second = move(buffer);
+    }
+    return append_data_by_key(key, iter->second);
+}
+
+
+IPCBuffer &IPCM::get_memory_data_by_key(const std::string &key) {
+    auto iter = m_dic.find(key);
+    if (iter != m_dic.end()) {
+        return iter->second;
+    }
+    static IPCBuffer zero(0);
+    return zero;
+}
+
+bool IPCM::append_data_by_key(const std::string &key, const IPCBuffer &buffer) {
+    return true;
+}
+
 bool IPCM::encodeInt(const std::string &key, int value) {
     if (key.empty()) {
         return false;
     }
-    size_t size = 1;
+    size_t size = cal_varint32_size(value);
     IPCBuffer buffer(size);
     SinkData data(buffer.get_ptr(), size);
     data.write_int32(value);
     return set_memory_data_by_key(key, move(buffer));
 }
 
-bool IPCM::set_memory_data_by_key(const std::string key, IPCBuffer &&buffer) {
-    if(buffer.length() == 0 || key.empty()){
-        return false;
+int32_t IPCM::decodeInt32(const std::string &key, int32_t default_value) {
+    if (key.empty()) {
+        return default_value;
     }
-    LockUtil lock(&m_thread_lock);
-    LockUtil lock1(&m_exclusive_lock);
-    auto iter = m_dic.find(key);
-    if(iter == m_dic.end()){
-        iter = m_dic.emplace(key, move(buffer)).first;
-    } else{
-        iter->second = move(buffer);
+    auto &data = get_memory_data_by_key(key);
+    if (data.length() > 0) {
+        SourceData source(data.get_ptr(), data.length());
+        return source.read_int32();
     }
-    return true;
+    return default_value;
 }
+
 
 static string gen_map_key(const string &map_id, string *relative_path) {
     if (relative_path && s_root_dir != (*relative_path)) {

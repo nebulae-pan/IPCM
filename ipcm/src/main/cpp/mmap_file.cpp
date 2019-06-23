@@ -17,7 +17,7 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
     }
     FileLock fileLock(m_fd, F_WRLCK);
     //lock file by fileLock
-    LockUtil<FileLock> lockUtil(&fileLock);
+    SCOPELOCK(fileLock);
 
     struct stat st = {};
     if (fstat(m_fd, &st) != -1) {

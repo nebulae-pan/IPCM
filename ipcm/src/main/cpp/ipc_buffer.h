@@ -18,6 +18,12 @@ public:
     IPCBuffer(size_t length = 0);
 
     IPCBuffer(void *source, size_t size);
+
+    IPCBuffer(IPCBuffer &&buffer) noexcept;
+
+    IPCBuffer &operator= (IPCBuffer &&buffer) noexcept ;
+
+    ~IPCBuffer();
 };
 
 #endif //IPCM_IPC_BUFFER_H

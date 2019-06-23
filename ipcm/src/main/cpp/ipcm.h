@@ -33,9 +33,17 @@ public:
     static IPCM *create_instance(const std::string &map_id, int page_size,
             size_t mode, std::string *relative_path = nullptr);
 
-    bool set_memory_data_by_key(const std::string key, IPCBuffer &&buffer);
+    IPCM();
+
+    bool set_memory_data_by_key(const std::string &key, IPCBuffer &&buffer);
+
+    IPCBuffer &get_memory_data_by_key(const std::string &key);
+
+    bool append_data_by_key(const std::string &key, const IPCBuffer &buffer);
 
     bool encodeInt(const std::string &key, int value);
+
+    int32_t decodeInt32(const std::string &key , int32_t default_value);
 };
 #endif //IPCM_IPCM_H
 

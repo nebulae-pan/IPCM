@@ -5,8 +5,22 @@
 #ifndef IPCM_BUFFER_H
 #define IPCM_BUFFER_H
 
-class SourceData{
+#include <cstdint>
+#include <cstdlib>
 
+class SourceData{
+    uint8_t *m_ptr;
+    size_t m_size;
+    int32_t m_pos;
+
+    uint8_t read_byte();
+    int32_t read_varint32();
+public:
+    SourceData(const void* ptr, size_t size);
+
+    ~SourceData();
+
+    int32_t read_int32();
 };
 
 #endif //IPCM_BUFFER_H

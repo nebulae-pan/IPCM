@@ -6,6 +6,7 @@
 #define IPCM_SINK_DATA_H
 
 #include "logger.h"
+#include "source_data.h"
 #include <cstdint>
 #include <string>
 
@@ -79,9 +80,13 @@ static void test() {
     SinkData data(&values, 100);
 
     LOGE("%s", int8_array_to_string(values, 20));
-    data.write_int32(-1);
+    data.write_int32(1800410);
 
     LOGE("%s", int8_array_to_hex_string(values, 20));
+
+    SourceData source(&values, 100);
+    int32_t result = source.read_int32();
+    LOGE("result:%d", result);
 }
 
 #endif //IPCM_SINK_DATA_H
