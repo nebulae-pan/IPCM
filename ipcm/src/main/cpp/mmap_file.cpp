@@ -6,7 +6,6 @@
 #include "file_lock.h"
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 
 MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         : m_name(path), m_fd(-1), m_segment_ptr(nullptr), m_segment_size(0) {
@@ -32,7 +31,7 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
                  strerror(errno));
             close(m_fd);
             m_fd = -1;
-            delete_file(m_name.c_str());
+            delete_file(m_name);
             return;
         }
     }
@@ -55,6 +54,18 @@ MemoryMapFile::~MemoryMapFile() {
         close(m_fd);
         m_fd = -1;
     }
+}
+
+bool MemoryMapFile::is_file_valid() {
+    return m_fd >= 0 && m_segment_size > 0 && m_segment_ptr && m_segment_ptr != MAP_FAILED;
+}
+
+void *MemoryMapFile::get_ptr() {
+    return m_segment_ptr;
+}
+
+size_t MemoryMapFile::size() {
+    return m_segment_size;
 }
 
 /**

@@ -9,6 +9,7 @@
 #include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 using namespace std;
 
@@ -24,6 +25,12 @@ public:
                   size_t size = static_cast<size_t>(getpagesize()),
                   bool file_type = false);
     ~MemoryMapFile();
+
+    bool is_file_valid();
+
+    void *get_ptr();
+
+    size_t size();
 };
 
 bool mk_path(char *path);

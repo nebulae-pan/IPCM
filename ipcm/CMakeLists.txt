@@ -34,6 +34,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/source_data.h
         src/main/cpp/source_data.cpp
         src/main/cpp/utils.h
+        src/main/cpp/meta_info.h
         src/main/cpp/bridge.cpp
         src/main/cpp/openssl/aes.h
         src/main/cpp/openssl/aes_cfb.c

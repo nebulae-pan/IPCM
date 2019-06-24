@@ -46,7 +46,7 @@ Java_com_nebula_module_ipcm_IPCM_encodeInt(JNIEnv *env, jobject instance, jlong 
     IPCM *ipcm = reinterpret_cast<IPCM *>(ptr);
     if (ipcm && key_) {
         std::string key = jstring2string(env, key_);
-        return static_cast<jboolean>(ipcm->encodeInt(key, value));
+        return static_cast<jboolean>(ipcm->encode_int32(key, value));
     }
     return static_cast<jboolean>(false);
 }

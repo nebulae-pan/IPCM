@@ -12,18 +12,31 @@
 #include "sink_data.h"
 #include "source_data.h"
 #include "thread_lock.h"
+#include "mmap_file.h"
+#include "meta_info.h"
+#include <sys/stat.h>
 #include <unordered_map>
 #include <string>
 #include <pthread.h>
 
 #define DEFAULT_MAP_KEY "ipcm.default"
 
-class IPCM{
+class IPCM {
 private:
     std::unordered_map<std::string, IPCBuffer> m_dic;
-    char* m_memory_ptr;
+    std::string m_path;
+    std::string m_map_id;
+    int m_fd;
+    size_t m_size;
+    size_t m_real_size;
+    char *m_memory_ptr;
     ThreadLock m_thread_lock;
     FileLock m_exclusive_lock;
+
+    MetaInfo m_meta_info;
+    MemoryMapFile m_memory_map_file;
+
+    void load_file_data();
 
 public:
     static void init(const std::string &root_dir);
@@ -31,7 +44,7 @@ public:
     static IPCM *default_instance(size_t mode);
 
     static IPCM *create_instance(const std::string &map_id, int page_size,
-            size_t mode, std::string *relative_path = nullptr);
+                                 size_t mode, std::string *relative_path = nullptr);
 
     IPCM();
 
@@ -41,9 +54,14 @@ public:
 
     bool append_data_by_key(const std::string &key, const IPCBuffer &buffer);
 
-    bool encodeInt(const std::string &key, int value);
+    bool encode_int32(const std::string &key, int32_t value);
 
-    int32_t decodeInt32(const std::string &key , int32_t default_value);
+    bool encode_int64(const std::string &key, int64_t value);
+
+    int32_t decode_int32(const std::string &key, int32_t default_value);
+
+    int64_t decode_int64(const std::string &key, int64_t default_value);
 };
+
 #endif //IPCM_IPCM_H
 

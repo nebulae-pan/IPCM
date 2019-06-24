@@ -38,6 +38,10 @@ void SinkData::write_int32(int32_t data) {
     }
 }
 
+void SinkData::write_int64(int64_t data) {
+    write_varint_64(data);
+}
+
 void SinkData::write_varint_32(int32_t value) {
     auto v = static_cast<uint32_t >(value);
     while (v > 0x7F) {

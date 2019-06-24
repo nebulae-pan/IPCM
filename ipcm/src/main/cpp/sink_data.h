@@ -25,6 +25,8 @@ public:
 
     void write_int32(int32_t data);
 
+    void write_int64(int64_t data);
+
     void write_varint_32(int32_t);
 
     void write_varint_64(int64_t);
@@ -79,14 +81,15 @@ static void test() {
 //    char string[200];
     SinkData data(&values, 100);
 
-    LOGE("%s", int8_array_to_string(values, 20));
-    data.write_int32(1800410);
+//    LOGE("%s", int8_array_to_string(values, 20));
+    data.write_varint_64(0x7fffffffffffffff);
 
-    LOGE("%s", int8_array_to_hex_string(values, 20));
+
+    LOGE("%s", int8_array_to_string(values, 20));
 
     SourceData source(&values, 100);
-    int32_t result = source.read_int32();
-    LOGE("result:%d", result);
+    int64_t result = source.read_int64();
+    LOGE("result:%lld", result);
 }
 
 #endif //IPCM_SINK_DATA_H
