@@ -5,6 +5,7 @@
 #include "ipc_buffer.h"
 #include <cstdlib>
 #include <utility>
+
 using namespace std;
 
 IPCBuffer::IPCBuffer(size_t length) {
@@ -13,8 +14,12 @@ IPCBuffer::IPCBuffer(size_t length) {
     }
 }
 
-IPCBuffer::IPCBuffer(void *source, size_t size) : m_ptr(source), m_size(size) {
-
+IPCBuffer::IPCBuffer(void *source, size_t size, bool copy) : m_ptr(source), m_size(size),
+                                                             m_copy_flag(copy) {
+    if (m_copy_flag) {
+        m_ptr = malloc(size);
+        memcpy(m_ptr, source, size);
+    }
 }
 
 IPCBuffer::IPCBuffer(IPCBuffer &&buffer) noexcept
@@ -32,7 +37,7 @@ IPCBuffer &IPCBuffer::operator=(IPCBuffer &&buffer) noexcept {
 }
 
 IPCBuffer::~IPCBuffer() {
-    if(m_ptr){
+    if (m_copy_flag && m_ptr) {
         free(m_ptr);
     }
     m_ptr = nullptr;

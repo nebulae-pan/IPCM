@@ -19,6 +19,8 @@ public:
 
     ~SinkData();
 
+    bool is_end() { return m_pos == m_size; }
+
     void write_raw_byte(uint8_t data);
 
     void write_bool(bool data);
@@ -27,9 +29,18 @@ public:
 
     void write_int64(int64_t data);
 
-    void write_varint_32(int32_t);
+    void write_varint32(int32_t value);
 
-    void write_varint_64(int64_t);
+    void write_varint64(int64_t value);
+
+    void write_string(const std::string &string);
+
+    void write_buff(const IPCBuffer &buffer);
+
+    void write_raw_buff(const
+                        IPCBuffer &buffer, size_t i);
+
+private:
 };
 
 static std::string *int_to_bit(int64_t value, uint8_t size) {
@@ -82,14 +93,15 @@ static void test() {
     SinkData data(&values, 100);
 
 //    LOGE("%s", int8_array_to_string(values, 20));
-    data.write_varint_64(0x7fffffffffffffff);
+//    data.write_varint_64(0x7fffffffffffffff);
+    data.write_string("123阿健康的法律是加夫里什剪短发");
 
 
-    LOGE("%s", int8_array_to_string(values, 20));
+//    LOGE("%s", int8_array_to_string(values, 20));
 
     SourceData source(&values, 100);
-    int64_t result = source.read_int64();
-    LOGE("result:%lld", result);
+    std::string result = source.read_string();
+    LOGE("result:%s", result.c_str());
 }
 
 #endif //IPCM_SINK_DATA_H

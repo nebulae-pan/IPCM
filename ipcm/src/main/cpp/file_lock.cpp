@@ -4,19 +4,19 @@
 
 #include "file_lock.h"
 
-FileLock::FileLock(int fd, short type) : m_fd(fd), m_type(type), m_enable(true) {
-    m_flock.l_type = type;
+FileLock::FileLock(int fd) : m_fd(fd) {
+    m_flock.l_type = F_WRLCK;
     m_flock.l_len = 0;
     m_flock.l_whence = SEEK_SET;
     m_flock.l_start = 0;
     m_flock.l_pid = 0;
 }
 
-bool FileLock::do_lock(int cmd) {
+bool FileLock::do_lock(short type, int cmd) {
     if (!is_lock_valid())return false;
     bool unlock_first_if_needed = false;
     //shared lock
-    if (m_type == F_RDLCK) {
+    if (type == F_RDLCK) {
         m_shared_lock_count++;
         if (m_shared_lock_count > 1 || m_exclusive_lock_count > 0) {
             return true;
@@ -29,7 +29,7 @@ bool FileLock::do_lock(int cmd) {
         if (m_shared_lock_count > 0)unlock_first_if_needed = true;
     }
 
-    m_flock.l_type = m_type;
+    m_flock.l_type = type;
     if (unlock_first_if_needed) {
         //need upgrade readLock to writeLock，so unlock exist readLock and lock writeLock
         //first try lock, if false, unlock readLock
@@ -53,22 +53,20 @@ bool FileLock::do_lock(int cmd) {
     return true;
 }
 
-bool FileLock::lock() {
-    if(!m_enable)return false;
-    return do_lock(F_SETLKW);
+bool FileLock::lock(short type) {
+    return do_lock(type, F_SETLKW);
 }
 
-bool FileLock::try_lock() {
-    if(!m_enable)return false;
-    return do_lock(F_SETLK);
+bool FileLock::try_lock(short type) {
+    return do_lock(type, F_SETLK);
 }
 
-bool FileLock::unlock() {
+bool FileLock::unlock(short type) {
     if (!is_lock_valid()) {
         return false;
     }
     bool downgrade_to_read_lock = false;
-    if (m_type == F_RDLCK) {
+    if (type == F_RDLCK) {
         if (m_shared_lock_count == 0) {
             return false;
         }
@@ -95,4 +93,31 @@ bool FileLock::unlock() {
     }
     LOGE("fail to unlock. fd=%d, result=%d, error=%s", m_fd, result, strerror(errno));
     return false;
+}
+
+ProcessLock::ProcessLock(FileLock *file_lock, short type)
+        : m_lock(file_lock), m_type(type), m_enable(true) {
+
+}
+
+void ProcessLock::lock() {
+    if (m_enable) {
+        m_lock->lock(m_type);
+    }
+}
+
+void ProcessLock::try_lock() {
+    if (m_enable) {
+        m_lock->try_lock(m_type);
+    }
+}
+
+void ProcessLock::unlock() {
+    if (m_enable) {
+        m_lock->unlock(m_type);
+    }
+}
+
+void ProcessLock::set_enable(bool enable) {
+    m_enable = enable;
 }

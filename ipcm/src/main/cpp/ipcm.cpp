@@ -20,10 +20,21 @@ static string gen_map_key(const string &map_id, string *relative_path);
 
 //static string
 
-IPCM::IPCM() : m_exclusive_lock(0, FileLock::TYPE_EXCLUSIVE),
-               m_memory_map_file("") {
+IPCM::IPCM(const string &map_id, int size)
+        : m_lock(0),
+          m_shared_lock(&m_lock, FileLock::TYPE_SHARED),
+          m_exclusive_lock(&m_lock, FileLock::TYPE_EXCLUSIVE),
+          m_memory_map_file("") {
+    m_fd = -1;
+    m_memory_ptr = nullptr;
+    m_size = 0;
+    m_real_size = 0;
+    m_sink_data = nullptr;
 
-
+    {
+        SCOPE_LOCK(m_shared_lock);
+        load_file_data();
+    }
 }
 
 void init_thread() {
@@ -54,14 +65,14 @@ IPCM *IPCM::create_instance(const std::string &map_id, int page_size, size_t mod
     if (map_id.empty()) {
         return nullptr;
     }
-    SCOPELOCK(s_instance_lock);
+    SCOPE_LOCK(s_instance_lock);
     auto key = gen_map_key(map_id, nullptr);
     auto iterator = s_instance_dic->find(key);
     if (iterator != s_instance_dic->end()) {
         return iterator->second;
     }
     //todo:deal with relative path
-    auto ptr = new IPCM();
+    auto ptr = new IPCM(map_id, 0);
     (*s_instance_dic)[key] = ptr;
     return ptr;
 }
@@ -70,8 +81,8 @@ bool IPCM::set_memory_data_by_key(const std::string &key, IPCBuffer &&buffer) {
     if (buffer.length() == 0 || key.empty()) {
         return false;
     }
-    SCOPELOCK(m_thread_lock);
-    SCOPELOCK(m_exclusive_lock);
+    SCOPE_LOCK(m_thread_lock);
+    SCOPE_LOCK(m_exclusive_lock);
     auto iter = m_dic.find(key);
     if (iter == m_dic.end()) {
         iter = m_dic.emplace(key, move(buffer)).first;
@@ -92,7 +103,23 @@ IPCBuffer &IPCM::get_memory_data_by_key(const std::string &key) {
 }
 
 bool IPCM::append_data_by_key(const std::string &key, const IPCBuffer &buffer) {
-    return true;
+    size_t total_size = key.length() + cal_varint32_size(static_cast<int32_t>(key.length()));
+    total_size += buffer.length() + cal_varint32_size(static_cast<int32_t>(buffer.length()));
+    if (m_real_size == 0) {
+        auto buff = ProtoBuffCoder::encode_data_to_buff(m_dic);
+        if (buff.length() > 0) {
+
+            write_real_size(buff.length());
+            m_sink_data->write_raw_buff(buff, 0); // note: don't write size of data
+            return true;
+        }
+        return false;
+    } else {
+        write_real_size(m_real_size + total_size);
+        m_sink_data->write_string(key);
+        m_sink_data->write_buff(buffer);
+        return true;
+    }
 }
 
 bool IPCM::encode_int32(const std::string &key, int32_t value) {
@@ -142,7 +169,13 @@ int64_t IPCM::decode_int64(const std::string &key, int64_t default_value) {
     return default_value;
 }
 
+void IPCM::write_real_size(size_t real_size) {
+    memcpy(m_memory_ptr, &real_size, 4);
+    m_real_size = real_size;
+}
+
 void IPCM::load_file_data() {
+    //read meta info
     if (m_memory_map_file.is_file_valid()) {
         m_meta_info.read(m_memory_map_file.get_ptr());
     }
@@ -172,68 +205,17 @@ void IPCM::load_file_data() {
         LOGE("fail to mmap [%s], %s", m_map_id.c_str(), strerror(errno));
         return;
     }
+    //read file real size
     memcpy(&m_real_size, m_memory_ptr, 4);
-    LOGE("loading [%s] with %zu size in total, file size is %zu", m_map_id.c_str(),
-         m_real_size, m_size);
-    bool loadFromFile = false, needFullWriteback = false;
-//    if (m_real_size > 0) {
-//        if (m_real_size < m_size && m_real_size + 4 <= m_size) {
-//            if (checkFileCRCValid()) {
-//                loadFromFile = true;
-//            } else {
-//                auto strategic = onMMKVCRCCheckFail(m_mmapID);
-//                if (strategic == OnErrorRecover) {
-//                    loadFromFile = true;
-//                    needFullWriteback = true;
-//                }
-//            }
-//        } else {
-//            auto strategic = onMMKVFileLengthError(m_mmapID);
-//            if (strategic == OnErrorRecover) {
-//                writeAcutalSize(m_size - Fixed32Size);
-//                loadFromFile = true;
-//                needFullWriteback = true;
-//            }
-//        }
-//    }
-//    if (loadFromFile) {
-//        MMKVInfo("loading [%s] with crc %u sequence %u", m_mmapID.c_str(),
-//                 m_metaInfo.m_crcDigest, m_metaInfo.m_sequence);
-//        MMBuffer inputBuffer(m_ptr + Fixed32Size, m_actualSize, MMBufferNoCopy);
-//        if (m_crypter) {
-//            decryptBuffer(*m_crypter, inputBuffer);
-//        }
-//        m_dic.clear();
-//        MiniPBCoder::decodeMap(m_dic, inputBuffer);
-//        m_output = new CodedOutputData(m_ptr + Fixed32Size + m_actualSize,
-//                                       m_size - Fixed32Size - m_actualSize);
-//        if (needFullWriteback) {
-//            fullWriteback();
-//        }
-//    } else {
-//        SCOPEDLOCK(m_exclusiveProcessLock);
-//
-//        if (m_actualSize > 0) {
-//            writeAcutalSize(0);
-//        }
-//        m_output = new CodedOutputData(m_ptr + Fixed32Size, m_size - Fixed32Size);
-//        recaculateCRCDigest();
-//    }
-//    MMKVInfo("loaded [%s] with %zu values", m_mmapID.c_str(), m_dic.size());
-//}
-//
-//if (!
-//
-//isFileValid()
-//
-//) {
-//MMKVWarning("[%s] file not valid", m_mmapID.
-//
-//c_str()
-//
-//);
-//
-//m_needLoadFromFile = false;
+    LOGE("loading [%s] with %zu size in total, file size is %zu",
+         m_map_id.c_str(), m_real_size, m_size);
+
+    IPCBuffer inputBuffer(m_memory_ptr + 4, m_real_size, false);
+    m_dic.clear();
+    ProtoBuffCoder::decode_buffer_to_map(m_dic, inputBuffer);
+
+    m_sink_data = new SinkData(m_memory_ptr + 4 + m_real_size, m_size - 4 - m_real_size);
+    LOGE("loaded [%s] with %zu values", m_map_id.c_str(), m_dic.size());
 }
 
 

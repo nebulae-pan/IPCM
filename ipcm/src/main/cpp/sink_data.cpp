@@ -32,17 +32,17 @@ void SinkData::write_bool(bool data) {
 
 void SinkData::write_int32(int32_t data) {
     if (data >= 0) {
-        this->write_varint_32(data);
+        this->write_varint32(data);
     } else {
-        this->write_varint_64(static_cast<int64_t >(data));
+        this->write_varint64(static_cast<int64_t >(data));
     }
 }
 
 void SinkData::write_int64(int64_t data) {
-    write_varint_64(data);
+    write_varint64(data);
 }
 
-void SinkData::write_varint_32(int32_t value) {
+void SinkData::write_varint32(int32_t value) {
     auto v = static_cast<uint32_t >(value);
     while (v > 0x7F) {
         this->write_raw_byte(static_cast<uint8_t>((v & 0x7F) | 0x80));
@@ -51,13 +51,31 @@ void SinkData::write_varint_32(int32_t value) {
     this->write_raw_byte(static_cast<uint8_t >(v & 0x7F));
 }
 
-void SinkData::write_varint_64(int64_t value) {
+void SinkData::write_varint64(int64_t value) {
     auto v = static_cast<uint64_t>(value);
     while (v > 0x7F) {
         this->write_raw_byte(static_cast<uint8_t >((v & 0x7F) | 0x80));
         v >>= 7;
     }
     this->write_raw_byte(static_cast<uint8_t>(v & 0x7F));
+}
+
+void SinkData::write_string(const std::string &string) {
+    size_t size = string.size();
+    write_varint32(static_cast<int32_t>(size));
+    memcpy(m_ptr + m_pos, string.data(), size);
+    m_pos += size;
+}
+
+void SinkData::write_buff(const IPCBuffer &buffer) {
+    size_t size = buffer.length();
+    write_varint32(static_cast<int32_t>(size));
+    write_raw_buff(buffer, size);
+}
+
+void SinkData::write_raw_buff(const IPCBuffer &buffer, size_t i) {
+    memcpy(m_ptr, buffer.get_ptr(), i);
+    m_pos += i;
 }
 
 

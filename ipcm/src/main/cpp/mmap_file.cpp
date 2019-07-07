@@ -14,9 +14,10 @@ MemoryMapFile::MemoryMapFile(const string &path, size_t size, bool file_type)
         LOGE("failed to open %s, %s", m_name.c_str(), strerror(errno));
         return;
     }
-    FileLock fileLock(m_fd, F_WRLCK);
+    FileLock file_lock(m_fd);
     //lock file by fileLock
-    SCOPELOCK(fileLock);
+    ProcessLock lock(&file_lock, FileLock::TYPE_EXCLUSIVE);
+    SCOPE_LOCK(lock);
 
     struct stat st = {};
     if (fstat(m_fd, &st) != -1) {
@@ -125,7 +126,7 @@ bool fill_file_by_zero(int fd, size_t start_pos, size_t size) {
     return true;
 }
 
-void delete_file(const string &file_path){
+void delete_file(const string &file_path) {
     auto result = unlink(file_path.c_str());
     if (result != 0) {
         LOGE("failed to delete file:%s, %s", file_path.c_str(), strerror(errno));

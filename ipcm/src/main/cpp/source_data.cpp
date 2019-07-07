@@ -73,3 +73,29 @@ int64_t SourceData::read_int64() {
     return read_varint64();
 }
 
+std::string SourceData::read_string() {
+    int32_t size = read_varint32();
+    if (size < (m_size - m_pos) && size > 0) {
+        std::string result((char *) (m_ptr + m_pos), static_cast<unsigned long>(size));
+        m_pos += size;
+        return result;
+    } else if (size == 0) {
+        return "";
+    } else {
+        LOGE("read string got error: available space:%d, size:%d", m_size - m_pos, size);
+        return std::string();
+    }
+}
+
+IPCBuffer SourceData::read_data() {
+    int32_t size = read_varint32();
+    if (size < (m_size - m_pos)) {
+        IPCBuffer data(m_ptr + m_pos, static_cast<size_t>(size));
+        m_pos += size;
+        return data;
+    } else {
+        LOGE("read data got error: available space:%d, size:%d", m_size - m_pos, size);
+        return IPCBuffer();
+    }
+}
+

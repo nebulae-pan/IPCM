@@ -33,6 +33,8 @@ add_library( # Sets the name of the library.
         src/main/cpp/sink_data.cpp
         src/main/cpp/source_data.h
         src/main/cpp/source_data.cpp
+        src/main/cpp/proto_buff_coder.h
+        src/main/cpp/proto_buff_coder.cpp
         src/main/cpp/utils.h
         src/main/cpp/meta_info.h
         src/main/cpp/bridge.cpp

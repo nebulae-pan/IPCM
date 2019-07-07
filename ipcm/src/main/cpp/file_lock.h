@@ -15,10 +15,8 @@ class FileLock {
     size_t m_shared_lock_count;
     size_t m_exclusive_lock_count;
     //flock type  exclusive:F_WRLCK, shared:F_RDLCK
-    short m_type;
-    bool m_enable;
 
-    bool do_lock(int cmd);
+    bool do_lock(short type, int cmd);
 
     bool is_lock_valid() {
         return m_fd >= 0;
@@ -31,13 +29,31 @@ class FileLock {
 public:
     static const int TYPE_EXCLUSIVE = F_WRLCK;
     static const int TYPE_SHARED = F_RDLCK;
-    FileLock(int fd, short type);
 
-    bool lock();
+    FileLock(int fd);
 
-    bool try_lock();
+    bool lock(short type);
 
-    bool unlock();
+    bool try_lock(short type);
+
+    bool unlock(short type);
+};
+
+class ProcessLock {
+    FileLock *m_lock;
+    short m_type;
+    bool m_enable;
+
+public:
+    ProcessLock(FileLock *file_lock, short type);
+
+    void lock();
+
+    void try_lock();
+
+    void unlock();
+
+    void set_enable(bool enable);
 };
 
 template<typename T>
@@ -47,6 +63,7 @@ class LockUtil {
     LockUtil(const LockUtil<T> &other) = delete;
 
     LockUtil &operator=(const LockUtil<T> &other) = delete;
+
 public:
     LockUtil(T *lock) : m_lock(lock) {
         assert(m_lock);
@@ -67,9 +84,9 @@ public:
     }
 };
 
-#define SCOPELOCK(lock) _SCOPELOCK(lock, __COUNTER__)
-#define _SCOPELOCK(lock, counter) __SCOPELOCK(lock, counter)
-#define __SCOPELOCK(lock, counter) LockUtil<decltype(lock)> __scopedLock##counter(&lock)
+#define SCOPE_LOCK(lock) _SCOPE_LOCK(lock, __COUNTER__)
+#define _SCOPE_LOCK(lock, counter) __SCOPE_LOCK(lock, counter)
+#define __SCOPE_LOCK(lock, counter) LockUtil<decltype(lock)> __scopedLock##counter(&lock)
 
 
 #endif //IPCM_FILE_LOCK_H
