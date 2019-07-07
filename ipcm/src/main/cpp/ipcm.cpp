@@ -106,11 +106,12 @@ bool IPCM::append_data_by_key(const std::string &key, const IPCBuffer &buffer) {
     size_t total_size = key.length() + cal_varint32_size(static_cast<int32_t>(key.length()));
     total_size += buffer.length() + cal_varint32_size(static_cast<int32_t>(buffer.length()));
     if (m_real_size == 0) {
+        //encode all dic to buffer
         auto buff = ProtoBuffCoder::encode_data_to_buff(m_dic);
         if (buff.length() > 0) {
 
             write_real_size(buff.length());
-            m_sink_data->write_raw_buff(buff, 0); // note: don't write size of data
+            m_sink_data->write_raw_buff(buff, 0);
             return true;
         }
         return false;

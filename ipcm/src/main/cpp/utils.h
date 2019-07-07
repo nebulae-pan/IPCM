@@ -8,7 +8,7 @@
 const int IPCM_MODE_NORMAL = 1;
 const int IPCM_MODE_MULTI_PROCESS = 2;
 
-inline size_t cal_varint32_size(int32_t value){
+inline int32_t cal_varint32_size(int32_t value){
     if ((value & (0xffffffff << 7)) == 0) {
         return 1;
     } else if ((value & (0xffffffff << 14)) == 0) {
@@ -21,7 +21,7 @@ inline size_t cal_varint32_size(int32_t value){
     return 5;
 }
 
-inline size_t cal_varint64_size(int64_t value){
+inline int32_t cal_varint64_size(int64_t value){
     if ((value & (0xffffffffffffffffL << 7)) == 0) {
         return 1;
     } else if ((value & (0xffffffffffffffffL << 14)) == 0) {

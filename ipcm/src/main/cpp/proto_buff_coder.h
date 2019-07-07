@@ -8,6 +8,8 @@
 #include "ipc_buffer.h"
 #include "source_data.h"
 #include "sink_data.h"
+#include "utils.h"
+#include "vector"
 #include <unordered_map>
 
 class ProtoBuffCoder {
@@ -37,6 +39,27 @@ public:
 
     template<typename T>
     static IPCBuffer encode_data_to_buff(const T &object);
+};
+
+enum EncodeItemType {
+    EncodeItemType_None,
+    EncodeItemType_String,
+    EncodeItemType_Data,
+    EncodeItemType_Container,
+};
+
+struct EncodeItem {
+    EncodeItemType type;
+    uint32_t compiled_size;
+    uint32_t value_size;
+    union {
+        const std::string *str_value;
+        const IPCBuffer *buffer_value;
+    } value;
+
+    EncodeItem() : type(EncodeItemType_None), compiled_size(0), value_size(0) {
+        memset(&value, 0, sizeof(value));
+    }
 };
 
 #endif //IPCM_PROTO_BUFF_CODER_H
